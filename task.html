@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Task</title>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <script>
+        function updatecoundowns() {
+            const now = new Date().getTime();
+            document.querySelectorAll('.countdown').forEach(function(element) {
+                const end = new Date(element.dataset.end).getTime();
+                const diff = end - now;
+                if (diff <= 0) {
+                    element.innerHTML = "Time's up!";
+                } else {
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    element.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+                }
+            });
+        }
+        setInterval(updatecoundowns, 1000);
+    </script>
+</head>
+<body onload="updatecoundowns()">
+    <div class="container">
+        <h1>Task manager + countdown</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <a href="{{ url_for('add_task') }}" class="back-btn">Add New Task</a>
+
+        {% if tasks %}
+        <div id="task-list">
+            {% for task in tasks %}
+                <div class="task">
+                    <span class="task-text">{{ task['name'] }} (Priority: {{ task['priority'] }})</span>
+                    <div class="task-actions">
+                        <a href="{{ url_for('edit_task', task_id=task['task_id']) }}" class="edit-btn">Edit</a>
+                        <span class="task-date">Added on: {{ task['date_added'] }}</span>
+                        <span class="task-date">End time: {{ task['end_time'] }}</span>
+                        <span class="task-date">Remaining time: {{ task['remaining_time'] }}</span>
+                        <span class="countdown" data-end="{{ task['date_added'].split(' ')[0] }}T{{ task['end_time'] }}:00"></span>
+                        <form action="{{ url_for('delete_task', task_id=task['task_id']) }}" method="POST">
+                            <button type="submit" class="delete-btn">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <p>No tasks available. <a href="{{ url_for('add_task') }}">Add a new task</a></p>
+        {% endif %}
+    </div>
+</body>
+</html>
